@@ -18,7 +18,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-//#define ENABLE_LOGGING
+//#define TRACE
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -100,7 +100,7 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             foreach (var pair in _AllocatedObjects) {
-                Console.WriteLine("ERROR: {0}* at 0x{1} leaked", pair.Value, pair.Key.ToString("X"));
+                Trace.WriteLine("ERROR: {0}* at 0x{1} leaked", pair.Value, pair.Key.ToString("X"));
                 _GcAction[pair.Value](pair.Key); // To make sure the next test doesn't fail because of this one's mistakes
             }
 
@@ -172,8 +172,8 @@ namespace CBForest
             var retVal = _c4db_open(path, flags, encryptionKey, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Database");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4db_open] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4db_open] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -213,13 +213,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)db;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4db_close] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4db_close] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -240,13 +240,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)db;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4db_delete] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4db_delete] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -385,13 +385,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)rawDoc;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4db_delete] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4db_delete] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -416,8 +416,8 @@ namespace CBForest
             var retVal = _c4raw_get(db, storeName, docID, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4RawDocument");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4raw_get] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4raw_get] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -491,13 +491,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)doc;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4doc_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4doc_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -525,8 +525,8 @@ namespace CBForest
             var retVal = _c4doc_get(db, docID, mustExist, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Document");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4doc_get] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4doc_get] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -611,6 +611,9 @@ namespace CBForest
                 return c4db_purgeDoc(db, docId_.AsC4Slice(), outError);
             }
         }
+
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+        public static extern C4DocEnumerator* c4db_purgeExpired(C4Database *db);
 
         /// <summary>
         /// Selects a specific revision of a document (or no revision, if revID is NULL.)
@@ -734,13 +737,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)e;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4enum_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4enum_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -767,8 +770,8 @@ namespace CBForest
             var retVal = _c4db_enumerateChanges(db, since, options, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4DocEnumerator");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4db_enumerateChanges] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4db_enumerateChanges] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -798,8 +801,8 @@ namespace CBForest
             var retVal = _c4db_enumerateAllDocs(db, startDocID, endDocID, options, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4DocEnumerator");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4db_enumerateAllDocs] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4db_enumerateAllDocs] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -854,8 +857,8 @@ namespace CBForest
                 #if DEBUG && !NET_3_5
                 if(retVal != null) {
                     _AllocatedObjects.TryAdd((IntPtr)retVal, "C4DocEnumerator");
-                #if ENABLE_LOGGING
-                    Console.WriteLine("[c4db_enumerateSomeDocs] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                    Trace.WriteLine("[c4db_enumerateSomeDocs] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
                 }
                 #endif
@@ -867,6 +870,64 @@ namespace CBForest
 
             return retVal;
         }
+
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi, EntryPoint="c4db_enumerateExpired")]
+        private static extern C4ExpiryEnumerator *_c4db_enumerateExpired(C4Database *db, C4Error *outError);
+
+        /// <summary>
+        /// Creates an enumerator for iterating over expired documents
+        /// Caller is responsible for freeing the enumerator when finished with it.
+        /// </summary>
+        /// <returns>The enumerate expired.</returns>
+        /// <param name="db">The database.</param>
+        /// <param name="outError">Error will be stored here on failure.</param>
+        public static C4ExpiryEnumerator *c4db_enumerateExpired(C4Database *db, C4Error *outError)
+        {
+            #if DEBUG && !NET_3_5
+            var retVal = _c4db_enumerateExpired(db, outError);
+            if(retVal != null) {
+            _AllocatedObjects.TryAdd((IntPtr)retVal, "C4DocEnumerator");
+            #if TRACE
+            Trace.WriteLine("[c4db_enumerateExpired] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+            #endif
+            }
+
+            return retVal;
+            #else
+            return _c4db_enumerateExpired(db, outError);
+            #endif
+        }
+
+        /// <summary>
+        /// Advances the enumerator to the next document.
+        /// Returns false at the end, or on error; look at the C4Error to determine which occurred,
+        /// and don't forget to free the enumerator.
+        /// </summary>
+        /// <returns><c>true</c> on success, <c>false</c> otherwise.</returns>
+        /// <param name="e">The enumerator</param>
+        /// <param name="outError">Records any error that occurred</param>
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool c4exp_next(C4ExpiryEnumerator *e, C4Error *outError);
+
+        /// <summary>
+        /// Stores the metadata of the enumerator's current document into the supplied
+        /// C4DocumentInfo struct. Unlike c4enum_getDocument(), this allocates no memory.
+        /// </summary>
+        /// <param name="e">The enumerator</param>
+        /// <param name="info">A pointer to a C4DocumentInfo struct that will be filled in if a document
+        ///   is found.  Only the document ID is valid and other values will be zeroed.</param>
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+        public static extern void c4exp_getInfo(C4ExpiryEnumerator *e, C4DocumentInfo *info);
+
+        /// <summary>
+        /// Frees a C4DocEnumerator handle, and optionally purges the processed entries
+        /// from the expiration key value store.
+        /// </summary>
+        /// <param name="e">The enumerator</param>
+        /// <param name="cleanupKvs">If set to <c>true</c> cleanup the old entries from the expiration store</param>
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+        public static extern void c4exp_free(C4ExpiryEnumerator *e, [MarshalAs(UnmanagedType.U1)]bool cleanupKvs);
 
         /// <summary>
         /// Advances the enumerator to the next document.
@@ -900,8 +961,8 @@ namespace CBForest
             var retVal = _c4enum_getDocument(e, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Document");
-            #if ENABLE_LOGGING
-            Console.WriteLine("[c4enum_getDocument] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+            #if TRACE
+            Trace.WriteLine("[c4enum_getDocument] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
             #endif
             }
 
@@ -926,8 +987,8 @@ namespace CBForest
             var retVal = _c4enum_nextDocument(e, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Document");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4enum_nextDocument] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4enum_nextDocument] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1111,8 +1172,8 @@ namespace CBForest
                 #if DEBUG && !NET_3_5
                 if(retVal != null) {
                     _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Document");
-                    #if ENABLE_LOGGING
-                    Console.WriteLine("[c4enum_nextDocument] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                    #if TRACE
+                    Trace.WriteLine("[c4enum_nextDocument] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                     #endif
                 }
                 #endif
@@ -1131,6 +1192,55 @@ namespace CBForest
             }
             
             return retVal;
+        }
+
+        /// <summary>
+        /// Sets an expiration date on a document.  After this time the
+        /// </summary>
+        /// <returns><c>true</c>, on success, <c>false</c> on failure.</returns>
+        /// <param name="db">The database to set the expiration date in</param>
+        /// <param name="docID">The ID of the document to set the expiration date for.</param>
+        /// <param name="timestamp">timestamp The UNIX timestamp of the expiration date (must
+        /// be in the future, i.e. after the current value of DateTime.UtcNow).</param>
+        /// <param name="outError">Information about any error that occurred</param>
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool c4doc_setExpiration(C4Database *db, C4Slice docID, ulong timestamp, C4Error *outError);
+
+        /// <summary>
+        /// Sets an expiration date on a document.  After this time the
+        /// </summary>
+        /// <returns><c>true</c>, on success, <c>false</c> on failure.</returns>
+        /// <param name="db">The database to set the expiration date in</param>
+        /// <param name="docID">The ID of the document to set the expiration date for.</param>
+        /// <param name="timestamp">timestamp The UNIX timestamp of the expiration date (must
+        /// be in the future, i.e. after the current value of DateTime.UtcNow).</param>
+        /// <param name="outError">Information about any error that occurred</param>
+        public static bool c4doc_setExpiration(C4Database *db, string docID, ulong timestamp, C4Error *outError)
+        {
+            using (var docID_ = new C4String(docID)) {
+                return c4doc_setExpiration(db, docID_.AsC4Slice(), timestamp, outError);
+            }
+        }
+
+        /// <summary>
+        /// Cancels a pending expiration on a document.
+        /// </summary>
+        /// <param name="db">The database the cancel the expiration date in</param>
+        /// <param name="docID">The ID of the document to cancel the expiration date for</param>
+        [DllImport(DLL_NAME, CallingConvention=CallingConvention.Cdecl, CharSet=CharSet.Ansi)]
+        public static extern void c4doc_cancelExpiration(C4Database *db, C4Slice docID);
+
+        /// <summary>
+        /// Cancels a pending expiration on a document.
+        /// </summary>
+        /// <param name="db">The database the cancel the expiration date in</param>
+        /// <param name="docID">The ID of the document to cancel the expiration date for</param>
+        public static void c4doc_cancelExpiration(C4Database *db, string docID)
+        {
+            using (var docID_ = new C4String(docID)) {
+                c4doc_cancelExpiration(db, docID_.AsC4Slice());
+            }
         }
 
         /// <summary>
@@ -1184,8 +1294,8 @@ namespace CBForest
             var retVal = _c4key_new();
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Key");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4key_new] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4key_new] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1209,8 +1319,8 @@ namespace CBForest
             var retVal = _c4key_withBytes(slice);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Key");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4key_withBytes] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4key_withBytes] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1252,8 +1362,8 @@ namespace CBForest
             var retVal = _c4key_newFullTextString(text, language);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Key");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4key_withBytes] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4key_withBytes] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1296,8 +1406,8 @@ namespace CBForest
             var retVal = _c4key_newGeoJSON(geoJSON, boundingBox);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Key");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4key_withBytes] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4key_withBytes] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1332,13 +1442,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)key;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4key_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4key_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -1570,8 +1680,8 @@ namespace CBForest
             var retVal = _c4view_open(db, path, viewName, version, flags, encryptionKey, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4View");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4view_open] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4view_open] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1616,13 +1726,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)view;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4view_close] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4view_close] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -1653,13 +1763,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)view;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4view_delete] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4view_delete] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -1758,8 +1868,8 @@ namespace CBForest
                 var retVal = _c4indexer_begin(db, viewPtr, (UIntPtr)(uint)views.Length, outError);
                 if(retVal != null) {
                     _AllocatedObjects.TryAdd((IntPtr)retVal, "C4Indexer");
-                #if ENABLE_LOGGING
-                    Console.WriteLine("[c4indexer_begin] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                    Trace.WriteLine("[c4indexer_begin] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
                 }
 
@@ -1785,8 +1895,8 @@ namespace CBForest
             var retVal = _c4indexer_enumerateDocuments(indexer, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4DocEnumerator");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4indexer_enumerateDocuments] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4indexer_enumerateDocuments] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1882,13 +1992,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)indexer;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4indexer_end] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4indexer_end] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -1912,8 +2022,8 @@ namespace CBForest
             var retVal = _c4view_query(view, options, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4QueryEnumerator");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1946,8 +2056,8 @@ namespace CBForest
             var retVal = _c4view_fullTextQuery(view, queryString, queryStringLanguage, options, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4QueryEnumerator");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -1995,8 +2105,8 @@ namespace CBForest
             var retVal = _c4view_geoQuery(view, area, outError);
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4QueryEnumerator");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -2068,13 +2178,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)e;
-            #if ENABLE_LOGGING
+            #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4queryenum_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4queryenum_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
@@ -2115,8 +2225,8 @@ namespace CBForest
             var retVal = _c4kv_new();
             if(retVal != null) {
                 _AllocatedObjects.TryAdd((IntPtr)retVal, "C4KeyValueList");
-                #if ENABLE_LOGGING
-                Console.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
+                #if TRACE
+                Trace.WriteLine("[c4view_query] Allocated 0x{0}", ((IntPtr)retVal).ToString("X"));
                 #endif
             }
 
@@ -2146,13 +2256,13 @@ namespace CBForest
         {
             #if DEBUG && !NET_3_5
             var ptr = (IntPtr)kv;
-                #if ENABLE_LOGGING
+                #if TRACE
             if(ptr != IntPtr.Zero && !_AllocatedObjects.ContainsKey(ptr)) {
-                Console.WriteLine("WARNING: [c4queryenum_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
+                Trace.WriteLine("WARNING: [c4queryenum_free] freeing object 0x{0} that was not found in allocated list", ptr.ToString("X"));
             } else {
             #endif
                 _AllocatedObjects.TryRemove(ptr, out _Dummy);
-            #if ENABLE_LOGGING
+            #if TRACE
             }
             #endif
             #endif
